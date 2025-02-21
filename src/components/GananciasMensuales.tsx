@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
 import {
   Bar,
@@ -11,7 +12,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -29,18 +29,32 @@ const currentDate2 = new Date().toLocaleDateString("es-ES", {
   month: "long",
 });
 
-const ganan05 = 70000;
-
-const chartData = [
-  { day: `05 ${currentDate2}`, ganancia: ganan05 },
-  { day: `10 ${currentDate2}`, ganancia: 50000 },
-  { day: `15 ${currentDate2}`, ganancia: 20000 },
-  { day: `20 ${currentDate2}`, ganancia: 68000 },
-  { day: `25 ${currentDate2}`, ganancia: 20000 },
-  { day: `30 ${currentDate2}`, ganancia: 13000 },
-];
-
 export default function GananciasMensuales() {
+  // 🔹 Definimos explícitamente el tipo del estado
+  const [chartData, setChartData] = useState<{ day: string; ganancia: number }[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("http://localhost:3001/ganancias");
+        const ganancias = await res.json();
+
+        setChartData([
+          { day: `05 ${currentDate2}`, ganancia: ganancias.gananciasDia05 },
+          { day: `10 ${currentDate2}`, ganancia: ganancias.gananciasDia10 },
+          { day: `15 ${currentDate2}`, ganancia: ganancias.gananciasDia15 },
+          { day: `20 ${currentDate2}`, ganancia: ganancias.gananciasDia20 },
+          { day: `25 ${currentDate2}`, ganancia: ganancias.gananciasDia25 },
+          { day: `30 ${currentDate2}`, ganancia: ganancias.gananciasDia30 },
+        ]);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
@@ -53,15 +67,9 @@ export default function GananciasMensuales() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" tick={{ fontSize: 12 }} />
             <YAxis />
-            <Tooltip
-              formatter={(value) => [`$${value}`, "Ganancia últimos 5 días"]}
-            />
+            <Tooltip formatter={(value) => [`$${value}`, "Ganancia últimos 5 días"]} />
             <Legend />
-            <Bar
-              dataKey="ganancia"
-              fill="hsl(var(--chart-1))"
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey="ganancia" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

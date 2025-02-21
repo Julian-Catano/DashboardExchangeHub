@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
 
@@ -18,12 +19,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
-  { ciudades: "Medellin", cambios: 300 },
-  { ciudades: "Bogota", cambios: 105 },
-  { ciudades: "Cali", cambios: 237 },
-];
-
 const chartConfig = {
   cambios: {
     label: "Cambios",
@@ -40,13 +35,34 @@ const currentDate = new Date().toLocaleDateString("es-ES", {
 });
 
 export default function CambiosCiudades() {
+  const [chartData, setChartData] = useState<{ ciudades: string; cambios: number }[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("http://localhost:3001/cambios-por-ciudad");
+        const data = await res.json();
+
+        setChartData(
+          data.map((item: { ciudad: string; cambios: number }) => ({
+            ciudades: item.ciudad,
+            cambios: item.cambios,
+          }))
+        );
+        
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <Card className="h-full w-full flex flex-col">
       <CardHeader className="items-center">
         <CardTitle>Mayores ciudades consumidoras de ExchangeHub</CardTitle>
-        <CardDescription>
-          {currentDate}
-        </CardDescription>
+        <CardDescription>{currentDate}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex items-center justify-center">
         <ChartContainer config={chartConfig} className="w-full h-full">

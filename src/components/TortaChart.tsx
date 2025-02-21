@@ -19,18 +19,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const clientesCambiosHechos: number = 25;
-
-const chartData = [
-  {
-    estado: "hechos",
-    cantidad: clientesCambiosHechos,
-    fill: "var(--color-hechos)",
-  },
-  { estado: "cancelados", cantidad: 45, fill: "var(--color-cancelados)" },
-  { estado: "enEspera", cantidad: 200, fill: "var(--color-enEspera)" },
-];
-
 const chartConfig = {
   cantidad: {
     label: "Clientes",
@@ -55,6 +43,31 @@ const currentDate = new Date().toLocaleDateString("es-ES", {
 });
 
 export default function TortaChart() {
+  const [chartData, setChartData] = React.useState([
+    { estado: "hechos", cantidad: 0, fill: "var(--color-hechos)" },
+    { estado: "cancelados", cantidad: 0, fill: "var(--color-cancelados)" },
+    { estado: "enEspera", cantidad: 0, fill: "var(--color-enEspera)" },
+  ]);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("http://localhost:3001/estadisticas");
+        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+        const data = await res.json();
+
+        setChartData([
+          { estado: "hechos", cantidad: data.cambios_hechos, fill: "var(--color-hechos)" },
+          { estado: "cancelados", cantidad: data.cambios_cancelados, fill: "var(--color-cancelados)" },
+          { estado: "enEspera", cantidad: data.cambios_en_espera, fill: "var(--color-enEspera)" },
+        ]);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    }
+    fetchData();
+  }, []);
+
   const totalClientes = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.cantidad, 0);
   }, [chartData]);
